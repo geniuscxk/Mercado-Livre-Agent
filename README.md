@@ -6,6 +6,45 @@
 
 > 业务口径以 `AGENTS.md` 与 `AGENTFORCODEX.MD` 为执行规范。本 README 用于人工阅读、复核和快速理解公式。
 
+## Codex 使用方式（必读）
+
+如果使用 OpenAI Codex 处理本项目，克隆仓库后必须在仓库目录中工作，并在执行任何账单处理任务之前完整读取项目规则。
+
+推荐安装方式：
+
+```bash
+git clone https://github.com/geniuscxk/Mercado-Livre-Agent.git
+cd Mercado-Livre-Agent
+```
+
+Codex 的读取顺序必须是：
+
+```text
+1. AGENTS.md
+2. AGENTFORCODEX.MD
+3. README.md（用于人工说明和公式复核）
+```
+
+其中：
+
+- `AGENTS.md` 是项目级 Agent 入口规则；
+- **Codex 在执行任务前必须继续完整读取并遵守 `AGENTFORCODEX.MD`**；
+- `AGENTFORCODEX.MD` 包含面向 Codex 的严格执行顺序、数据校验、公式实现、异常停止条件和交付检查；
+- 不得只读取 `AGENTS.md` 后跳过 `AGENTFORCODEX.MD`；
+- 不得凭 README 自行简化、改写或推断业务公式；
+- 如果 `AGENTS.md`、`AGENTFORCODEX.MD` 与用户当前明确指令之间存在冲突，必须停止执行并让用户确认，不得自行决定。
+
+给 Codex 的推荐指令：
+
+```text
+请克隆并进入这个仓库：
+https://github.com/geniuscxk/Mercado-Livre-Agent.git
+
+执行任何任务前，先完整读取 AGENTS.md，随后必须完整读取 AGENTFORCODEX.MD，并严格按其中规则处理 Mercado Livre 账单。不要跳过 AGENTFORCODEX.MD，也不要自行修改统计口径。
+```
+
+仅执行 `git clone` 的作用是下载仓库；**要让 Codex 正确使用本 Agent，还必须让 Codex 在该仓库目录中读取并遵守 `AGENTS.md` 和 `AGENTFORCODEX.MD`。**
+
 ## 1. 输入文件与标准字段
 
 输入文件为 `.xlsx`，目标工作表通常为：
