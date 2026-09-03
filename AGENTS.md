@@ -1,5 +1,16 @@
 # Mercado Livre 月度账单提取规则
 
+## Codex 强制入口规则
+
+如果当前执行环境是 OpenAI Codex，在执行任何文件读取、账单计算、Excel 修改或结果生成之前：
+
+1. 必须先完整读取本文件 `AGENTS.md`；
+2. 随后必须完整读取仓库根目录的 `AGENTFORCODEX.MD`；
+3. 只有两份规则都读取完成后，才允许开始处理用户账单；
+4. 不得跳过、只节选读取或仅凭 `README.md` 推断 Codex 执行规范；
+5. `AGENTFORCODEX.MD` 中的执行顺序、校验、异常停止条件和实现约束必须严格遵守；
+6. 如果两份规则之间或与用户当前明确指令存在无法消解的冲突，必须停止并让用户确认，不得自行猜测。
+
 ## 任务目标
 
 读取 Mercado Livre 巴西站导出的销售账单 Excel，先检查导出数据是否完整，再输出月度财务汇总和按 SKU 统计的出库数量。
@@ -138,7 +149,9 @@ Excel 示例：`=SUM(I7:I最后一行)`。
 佣金 = SUM(Tarifa de venda e impostos (BRL))
 ```
 
-Excel 示例：`=SUM(L7:L最后一行)`。保留原始负号。
+Excel 示例：`=SUM(L7:L最后一行)`。
+
+保留原始负号。
 
 ### 5. 运费
 
@@ -146,7 +159,9 @@ Excel 示例：`=SUM(L7:L最后一行)`。保留原始负号。
 运费 = SUM(Tarifas de envio (BRL))
 ```
 
-Excel 示例：`=SUM(N7:N最后一行)`。M 列 `Receita por envio` 是配送收入，不是这里的“运费”。保留原始负号。
+Excel 示例：`=SUM(N7:N最后一行)`。M 列 `Receita por envio` 是配送收入，不是这里的“运费”。
+
+保留原始负号。
 
 ### 6. SKU 出库数量
 
