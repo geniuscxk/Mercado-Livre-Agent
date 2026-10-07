@@ -48,6 +48,7 @@
 | L | `Tarifa de venda e impostos (BRL)` | 佣金 |
 | M | `Receita por envio (BRL)` | 买家支付并进入卖家账目的配送收入 |
 | N | `Tarifas de envio (BRL)` | 卖家承担的运费 |
+| O | `Custo de envio com base nas medidas e peso declarados` | 尺寸重量偏差运费成本 |
 | R | `Cancelamentos e reembolsos (BRL)` | 退款 |
 | S | `Total (BRL)` | 回款 |
 | W | `SKU` | 商品 SKU |
@@ -118,16 +119,16 @@ Mercado Livre 导出的账单存在数据缺失：商品数量有值，但 Recei
 
 以下公式为当前已确认的固定统计口径。标准列位置为：`Estado=D`、`Unidades=H`、`Receita por produtos=I`、`Tarifa de venda e impostos=L`、`Receita por envio=M`、`Tarifas de envio=N`、`Cancelamentos e reembolsos=R`、`Total=S`、`SKU=W`。示例以第 7 行为第一条数据；实际运行必须动态识别最后一行。
 
-| 指标 | 业务公式 | Excel 示例 |
+| 指标 / 原葡语字段 | 业务公式 | Excel 示例 |
 | --- | --- | --- |
-| 订单数 | `COUNT(Receita por produtos)`，即统计 I 列非空数字财务行 | `=COUNT(I7:I最后一行)` |
-| 订单金额 | `SUM(Receita por produtos)` | `=SUM(I7:I最后一行)` |
-| 平台补贴 | 每行 `ROUND(S-I-L-M-N-R,2)` 后再 `SUM` | `=ROUND(IFERROR(--S7,0)-IFERROR(--I7,0)-IFERROR(--L7,0)-IFERROR(--M7,0)-IFERROR(--N7,0)-IFERROR(--R7,0),2)` |
-| 佣金 | `SUM(Tarifa de venda e impostos)` | `=SUM(L7:L最后一行)` |
-| 运费 | `SUM(Tarifas de envio)` | `=SUM(N7:N最后一行)` |
-| 退款 | `SUM(Cancelamentos e reembolsos)`，Estado 不筛选 | `=SUM(R7:R最后一行)` |
-| 实际营收 | `订单金额 + 退款`；退款保留负号 | `=订单金额单元格+退款单元格` |
-| SKU 出库数量 | `Estado <> "Cancelada pelo comprador"` 后按 SKU 分组 `SUM(Unidades)` | `=SUMIFS($H$7:$H$最后一行,$W$7:$W$最后一行,SKU单元格,$D$7:$D$最后一行,"<>Cancelada pelo comprador")` |
+| 订单数 (`N.º de vendas`) | `COUNT(Receita por produtos)`，即统计 I 列非空数字财务行 | `=COUNT(I7:I最后一行)` |
+| 订单金额 (`Receita por produtos (BRL)`) | `SUM(Receita por produtos)` | `=SUM(I7:I最后一行)` |
+| 平台补贴 (`Descontos e bônus`) | 每行 `ROUND(S-I-L-M-N-O-R,2)` 后再 `SUM` | `=ROUND(IFERROR(--S7,0)-IFERROR(--I7,0)-IFERROR(--L7,0)-IFERROR(--M7,0)-IFERROR(--N7,0)-IFERROR(--O7,0)-IFERROR(--R7,0),2)` |
+| 佣金 (`Tarifa de venda e impostos`) | `SUM(Tarifa de venda e impostos)` | `=SUM(L7:L最后一行)` |
+| 运费 (`Tarifas de envio`) | `SUM(M列 + N列 + O列)`（配送收入 + 卖家运费 + 尺寸重量偏差费用） | `=SUM(M7:M最后一行)+SUM(N7:N最后一行)+SUM(O7:O最后一行)` |
+| 退款 (`Cancelamentos e reembolsos (BRL)`) | `SUM(Cancelamentos e reembolsos)`，Estado 不筛选 | `=SUM(R7:R最后一行)` |
+| 实际营收 (`Receita líquida`) | `订单金额 + 退款`；退款保留负号 | `=订单金额单元格+退款单元格` |
+| SKU 出库数量 (`Unidades`) | `Estado <> "Cancelada pelo comprador"` 后按 SKU 分组 `SUM(Unidades)` | `=SUMIFS($H$7:$H$最后一行,$W$7:$W$最后一行,SKU单元格,$D$7:$D$最后一行,"<>Cancelada pelo comprador")` |
 
 ### COUNT 与 SUM 的强制原则
 
@@ -163,9 +164,9 @@ Excel 示例：`=SUM(I7:I最后一行)`。
 
 结果使用 BRL，保留 2 位小数。
 
-### 3. 平台补贴
+### 3. 平台补贴 (`Descontos e bônus`)
 
-不得直接使用或汇总 `Descontos e bônus`。
+不得直接使用或汇总源账单 Q 列 `Descontos e bônus`。
 
 每一行必须按以下口径反算：
 
@@ -177,6 +178,7 @@ ROUND(
   - Tarifa de venda e impostos (BRL)
   - Receita por envio (BRL)
   - Tarifas de envio (BRL)
+  - Custo de envio com base nas medidas e peso declarados (BRL)
   - Cancelamentos e reembolsos (BRL),
   2
 )
@@ -185,12 +187,12 @@ ROUND(
 标准列位置的数据行公式示例：
 
 ```excel
-=ROUND(IFERROR(--S7,0)-IFERROR(--I7,0)-IFERROR(--L7,0)-IFERROR(--M7,0)-IFERROR(--N7,0)-IFERROR(--R7,0),2)
+=ROUND(IFERROR(--S7,0)-IFERROR(--I7,0)-IFERROR(--L7,0)-IFERROR(--M7,0)-IFERROR(--N7,0)-IFERROR(--O7,0)-IFERROR(--R7,0),2)
 ```
 
 总平台补贴等于全部逐行反算结果之和，并再次四舍五入到 2 位小数。
 
-### 4. 佣金
+### 4. 佣金 (`Tarifa de venda e impostos`)
 
 ```text
 佣金 = SUM(Tarifa de venda e impostos (BRL))
@@ -200,15 +202,19 @@ Excel 示例：`=SUM(L7:L最后一行)`。
 
 保留原始正负号。
 
-### 5. 运费
+### 5. 运费 (`Tarifas de envio`)
 
 ```text
-运费 = SUM(Tarifas de envio (BRL))
+运费 = SUM(M列 Receita por envio + N列 Tarifas de envio + O列 Custo de envio com base nas medidas e peso declarados)
 ```
 
-Excel 示例：`=SUM(N7:N最后一行)`。M 列 `Receita por envio` 是配送收入，不是这里的“运费”。
+Excel 示例：`=SUM(M7:M最后一行)+SUM(N7:N最后一行)+SUM(O7:O最后一行)`。
 
-保留原始正负号。
+口径说明：
+- M 列为买家支付并计入卖家账目的配送收入（正数）；
+- N 列为平台扣除的卖家承担基础运费（负数）；
+- O 列为声明尺寸重量差异产生的运费成本（负数或0）；
+- 最终经营表“运费（`Tarifas de envio`）”按净运费统计，为 M + N + O 三列之和。保留原始正负号。
 
 ### 6. SKU 出库数量
 
@@ -242,7 +248,7 @@ GROUP BY SKU
 
 汇总后按出库数量降序排列；数量相同时按 SKU 升序排列。
 
-### 7. 退款
+### 7. 退款 (`Cancelamentos e reembolsos (BRL)`)
 
 ```text
 退款 = SUM(Cancelamentos e reembolsos (BRL))
@@ -250,7 +256,7 @@ GROUP BY SKU
 
 Excel 示例：`=SUM(R7:R最后一行)`。退款统计时 `Estado` 全选，不按状态筛选；保留原始正负号。
 
-### 8. 实际营收（经营表派生指标）
+### 8. 实际营收（`Receita líquida`，经营表派生指标）
 
 ```text
 实际营收 = 订单金额 + 退款
@@ -264,29 +270,30 @@ Excel 示例：`=SUM(R7:R最后一行)`。退款统计时 `Estado` 全选，不�
 
 ### `Summary`
 
-按固定顺序输出：
+必须同时输出原葡语字段名称、中文业务名称与英文指标名，按固定顺序输出：
 
-1. Orders
-2. Order amount (GMV)
-3. Platform subsidy
-4. Commission
-5. Shipping fee
-6. SKU outbound units
-7. Refunds
+1. Orders / `N.º de vendas`（订单数）
+2. Order amount (GMV) / `Receita por produtos (BRL)`（订单金额 / GMV）
+3. Platform subsidy / `Descontos e bônus`（平台补贴 / 佣金补贴，反算值）
+4. Commission / `Tarifa de venda e impostos`（平台佣金及税费）
+5. Shipping fee / `Tarifas de envio`（运费 / 净运费，M列+N列+O列）
+6. Refunds / `Cancelamentos e reembolsos (BRL)`（退款 / 退货金额）
+7. Actual revenue / `Receita líquida`（实际营收 / 净销售额）
+8. SKU outbound units / `Unidades enviadas`（SKU 出库总件数）
 
 要求：
-
+- 表头必须包含原葡语字段列（`Campo` / `Campo em Português`），确保与美客多后台报表及店铺经营表无缝对接；
+- 可在运费项下附带输出 M 列配送收入、N 列卖家运费、O 列尺寸重量偏差费用的分项明细；
 - 每个指标附带简短口径说明；
 - 金额使用 BRL 并保留 2 位小数；
 - 数量显示为整数；
-- 平台补贴注明为公式反算值；
-- 明确注明未使用 `Descontos e bônus`。
+- 平台补贴注明为公式反算值，并明确注明未使用账单原 Q 列。
 
 ### `SKU Outbound`
 
 至少包含：
 
-| SKU | Outbound units |
+| SKU | Outbound units (出库件数) |
 | --- | ---: |
 
 按数量降序、SKU 升序排列，并在底部显示总计。
@@ -296,14 +303,15 @@ Excel 示例：`=SUM(R7:R最后一行)`。退款统计时 `Estado` 全选，不�
 只保留复核必需字段：
 
 - 源表 Excel 行号；
-- 销售编号；
-- 日期；
+- 销售编号 (N.º de venda)；
+- 日期 (Data de venda)；
 - `Estado`；
 - 组合订单行类型；
 - `SKU`；
 - `Unidades`；
-- I、L、M、N、R、S 列原始数值；
-- 逐行反算平台补贴；
+- I、L、M、N、O、R、S 列原始数值；
+- 单行运费合计 Tarifas de envio (M+N+O)；
+- 逐行反算平台补贴 Descontos e bônus；
 - 订单计数标记；
 - 出库计数标记；
 - 排除原因。
@@ -332,7 +340,9 @@ Excel 示例：`=SUM(R7:R最后一行)`。退款统计时 `Estado` 全选，不�
 - SKU 出库数量按 `SUM(Unidades)` 汇总，不得按 `COUNT(SKU)` 或商品行数汇总；
 - 对全部 `Unidades > 1` 的商品行进行专项校验，确认数量完整累计；
 - SKU 出库数量只排除 `Cancelada pelo comprador`；
-- 平台补贴未引用 `Descontos e bônus`；
+- 平台补贴未引用源表 Q 列 `Descontos e bônus`，且反算公式扣除了 M、N、O 各列；
+- 运费按 M 列 + N 列 + O 列准确求和；
+- 输出 Summary 表格包含原葡语字段名称；
 - 佣金、运费和退款保留原始正负号；
 - `SKU Outbound` 合计等于 `Summary` 的 SKU outbound units；
 - 逐行平台补贴之和等于 `Summary` 的 Platform subsidy；
@@ -344,15 +354,16 @@ Excel 示例：`=SUM(R7:R最后一行)`。退款统计时 `Estado` 全选，不�
 
 ## 最终回复格式
 
-正常完成时，回复中按以下顺序列出：
+正常完成时，回复中并列列出原葡语字段、中文业务名与英文指标：
 
-1. 订单数
-2. 订单金额
-3. 平台补贴
-4. 佣金
-5. 运费
-6. SKU 出库数量合计与 SKU 种类数
-7. 退款
+1. 订单数（Orders / `N.º de vendas`）
+2. 订单金额（Order amount / `Receita por produtos (BRL)`）
+3. 平台补贴（Platform subsidy / `Descontos e bônus`）
+4. 佣金（Commission / `Tarifa de venda e impostos`）
+5. 运费（Shipping fee / `Tarifas de envio`，注明 M+N+O）
+6. 退款（Refunds / `Cancelamentos e reembolsos (BRL)`）
+7. 实际营收（Actual revenue / `Receita líquida`）
+8. SKU 出库数量合计与 SKU 种类数（`Unidades enviadas`）
 
 同时提供结果 Excel 的可点击链接，并明确说明异常检查已通过。
 
